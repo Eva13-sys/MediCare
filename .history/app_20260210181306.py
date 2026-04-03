@@ -108,13 +108,14 @@ def chat():
         formatted_response += f"\n\n Confidence: {confidence_label} ({confidence_score}%)"
         formatted_response += "\n(Please verify this information)"
     else:
-        formatted_response += f"\n\n Confidence: {confidence_label} ({confidence_score}%)"
+        formatted_response += f"\n\n✓ Confidence: {confidence_label} ({confidence_score}%)"
     
     if citations:
-        formatted_response += f"\n\nSources:\n" + "\n".join(citations)
-    
+        formatted_response=f"{answer}\n\nSources:\n" + "\n".join(citations)
+    else:
+        formatted_response=answer
+
     print(f"Response: {formatted_response}")
-    print(f"Confidence Score: {confidence_score}% ({confidence_label})")
     return str(formatted_response)
 
 @app.route("/clear", methods=["POST"])

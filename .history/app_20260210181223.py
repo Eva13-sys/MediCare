@@ -101,20 +101,14 @@ def chat():
         source_file = doc.metadata.get("source", "Unknown Source")
         filename= source_file.split("\\")[-1].split("/")[-1]
         citations.append(f"[{i}]{filename}")
+        
 
-    formatted_response = clean_answer
-
-    if confidence_score < 60:
-        formatted_response += f"\n\n Confidence: {confidence_label} ({confidence_score}%)"
-        formatted_response += "\n(Please verify this information)"
-    else:
-        formatted_response += f"\n\n Confidence: {confidence_label} ({confidence_score}%)"
-    
     if citations:
-        formatted_response += f"\n\nSources:\n" + "\n".join(citations)
-    
+        formatted_response=f"{answer}\n\nSources:\n" + "\n".join(citations)
+    else:
+        formatted_response=answer
+
     print(f"Response: {formatted_response}")
-    print(f"Confidence Score: {confidence_score}% ({confidence_label})")
     return str(formatted_response)
 
 @app.route("/clear", methods=["POST"])

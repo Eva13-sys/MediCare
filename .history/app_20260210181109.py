@@ -88,11 +88,10 @@ def chat():
     response = rag_chain.invoke({"input": msg, "chat_history": history_text})
     raw_answer= response["answer"]
 
-    clean_answer, confidence_score = extract_confidence(raw_answer)
+    clean_answer, confidence_score = extract_confidence(answer)
     confidence_label= get_confidence_label(confidence_score)
-
     memory.chat_memory.add_user_message(msg)
-    memory.chat_memory.add_ai_message(clean_answer)
+    memory.chat_memory.add_ai_message(answer)
 
     sources= response.get("context",[])
     citations=[]
@@ -102,19 +101,12 @@ def chat():
         filename= source_file.split("\\")[-1].split("/")[-1]
         citations.append(f"[{i}]{filename}")
 
-    formatted_response = clean_answer
-
-    if confidence_score < 60:
-        formatted_response += f"\n\n Confidence: {confidence_label} ({confidence_score}%)"
-        formatted_response += "\n(Please verify this information)"
-    else:
-        formatted_response += f"\n\n Confidence: {confidence_label} ({confidence_score}%)"
-    
     if citations:
-        formatted_response += f"\n\nSources:\n" + "\n".join(citations)
-    
+        formatted_response=f"{answer}\n\nSources:\n" + "\n".join(citations)
+    else:
+        formatted_response=answer
+
     print(f"Response: {formatted_response}")
-    print(f"Confidence Score: {confidence_score}% ({confidence_label})")
     return str(formatted_response)
 
 @app.route("/clear", methods=["POST"])

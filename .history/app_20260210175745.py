@@ -8,10 +8,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 from src.prompt import *
 from src.memory_handler import memory_manager
-from src.confidence_scorer import extract_confidence, get_confidence_label, get_confidence_color
 import os
 import uuid
-import re
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24) 
@@ -43,15 +41,14 @@ chatModel = ChatGroq(model="llama-3.3-70b-versatile", api_key=GROQ_API_KEY)
 
 system_prompt_with_history=(
     "You are an medical assistant for question-answering tasks. "
-    "Use the following pieces of retrieved context and conversation history to answer the question. "
+    "Use the following pieces of retrieved context to answer "
     "the question. If you don't know the answer, say that you "
     "don't know. Use three sentences maximum and keep the  "
     "answer concise."
     "\n\n"
     "Conversation History:\n{chat_history}\n\n"
-    "Context: {context}"
+    "Context:{context}"
 )
-
 prompt = ChatPromptTemplate.from_messages([
     ("system", system_prompt_with_history),
     ("human", "{input}")
@@ -73,26 +70,11 @@ def chat():
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
     session_id = session['session_id']
-    print(f"Session ID: {session_id}")
+    
     # input_text = msg
     print(f"User Question: {msg}")
-
-    memory = memory_manager.get_or_create_memory(session_id)
-    chat_history = memory_manager.get_conversation_history(session_id)
-
-    history_text=""
-    for i, message in enumerate(chat_history[-6:]):
-        role = "User" if i%2 == 0 else "Assistant"
-        history_text += f"{role}: {message.content}\n"
-
-    response = rag_chain.invoke({"input": msg, "chat_history": history_text})
-    raw_answer= response["answer"]
-
-    clean_answer, confidence_score = extract_confidence(raw_answer)
-    confidence_label= get_confidence_label(confidence_score)
-
-    memory.chat_memory.add_user_message(msg)
-    memory.chat_memory.add_ai_message(clean_answer)
+    response = rag_chain.invoke({"input": msg})
+    answer= response["answer"]
 
     sources= response.get("context",[])
     citations=[]
@@ -102,28 +84,14 @@ def chat():
         filename= source_file.split("\\")[-1].split("/")[-1]
         citations.append(f"[{i}]{filename}")
 
-    formatted_response = clean_answer
-
-    if confidence_score < 60:
-        formatted_response += f"\n\n Confidence: {confidence_label} ({confidence_score}%)"
-        formatted_response += "\n(Please verify this information)"
-    else:
-        formatted_response += f"\n\n Confidence: {confidence_label} ({confidence_score}%)"
-    
     if citations:
-        formatted_response += f"\n\nSources:\n" + "\n".join(citations)
-    
+        formatted_response=f"{answer}\n\nSources:\n" + "\n".join(citations)
+    else:
+        formatted_response=answer
+
     print(f"Response: {formatted_response}")
-    print(f"Confidence Score: {confidence_score}% ({confidence_label})")
     return str(formatted_response)
 
-@app.route("/clear", methods=["POST"])
-def clear_chat():
-    if 'session_id' in session:
-        session_id = session['session_id']
-        memory_manager.clear_session(session_id)
-        return jsonify({"status": "success", "message": "Chat history cleared successfully"})
-    return jsonify({"status": "error", "message": "No active session found"})
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080, debug=True)

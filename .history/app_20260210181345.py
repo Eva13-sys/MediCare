@@ -112,9 +112,10 @@ def chat():
     
     if citations:
         formatted_response += f"\n\nSources:\n" + "\n".join(citations)
-    
+    # else:
+    #     formatted_response=answer
+
     print(f"Response: {formatted_response}")
-    print(f"Confidence Score: {confidence_score}% ({confidence_label})")
     return str(formatted_response)
 
 @app.route("/clear", methods=["POST"])
