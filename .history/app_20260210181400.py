@@ -31,19 +31,9 @@ os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 os.environ["GROQ_API_KEY"] = GROQ_API_KEY
 
 embeddings = download_embeddings()
-# index_name = "medicare"
-# docsearch = PineconeVectorStore.from_existing_index(
-#     index_name=index_name,
-#     embedding=embeddings
-# )
-from pinecone import Pinecone
-
-pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
-
-index = pc.Index(host=os.getenv("PINECONE_HOST"))
-
-docsearch = PineconeVectorStore(
-    index=index,
+index_name = "medicare"
+docsearch = PineconeVectorStore.from_existing_index(
+    index_name=index_name,
     embedding=embeddings
 )
 

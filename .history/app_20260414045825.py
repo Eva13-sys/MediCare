@@ -36,16 +36,6 @@ embeddings = download_embeddings()
 #     index_name=index_name,
 #     embedding=embeddings
 # )
-from pinecone import Pinecone
-
-pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
-
-index = pc.Index(host=os.getenv("PINECONE_HOST"))
-
-docsearch = PineconeVectorStore(
-    index=index,
-    embedding=embeddings
-)
 
 retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
 
