@@ -1,34 +1,28 @@
 import re
 
 def extract_confidence(response_text: str) -> tuple:
-    confidence_patterns = [
-        r'Confidence:\s*(\d+)%',
-        r'(\d+)%\s*confident',
-        r'confidence.*?(\d+)%'
-    ]
-    
-    confidence = None
-    for pattern in confidence_patterns:
-        match = re.search(pattern, response_text, re.IGNORECASE)
-        if match:
-            confidence = int(match.group(1))
-            response_text = re.sub(pattern, '', response_text, flags=re.IGNORECASE)
-            break
-    
-    if confidence is None:
+    match = re.search(r'Confidence:\s*(\d{1,3})%', response_text)
+
+    if match:
+        confidence = int(match.group(1))
+        confidence = min(confidence, 100)
+        response_text = re.sub(r'Confidence:\s*\d{1,3}%', '', response_text)
+    else:
         confidence = estimate_confidence(response_text)
-    
+
     return response_text.strip(), confidence
 
 
 def estimate_confidence(text: str) -> int:
     text_lower = text.lower()
-    if any(phrase in text_lower for phrase in ['definitely', 'certainly', 'clearly', 'absolutely']):
-        return 95
-    if any(phrase in text_lower for phrase in ['likely', 'probably', 'typically', 'generally']):
+
+    if any(w in text_lower for w in ['definitely', 'certainly']):
+        return 90
+    if any(w in text_lower for w in ['likely', 'generally']):
         return 75
-    if any(phrase in text_lower for phrase in ['might', 'may', 'possibly', 'perhaps', 'unsure', "don't know"]):
-        return 40
+    if any(w in text_lower for w in ['maybe', 'possibly']):
+        return 50
+
     return 70
 
 
@@ -37,8 +31,7 @@ def get_confidence_label(score: int) -> str:
         return "High"
     elif score >= 60:
         return "Medium"
-    else:
-        return "Low"
+    return "Low"
 
 
 def get_confidence_color(score: int) -> str:
@@ -46,5 +39,4 @@ def get_confidence_color(score: int) -> str:
         return "green"
     elif score >= 60:
         return "orange"
-    else:
-        return "red"
+    return "red"
