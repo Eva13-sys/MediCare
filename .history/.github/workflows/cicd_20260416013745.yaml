@@ -71,8 +71,6 @@ jobs:
         -e GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}" \
         -e PINECONE_HOST="${{ secrets.PINECONE_HOST }}" \
         ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPO }}:latest
-
-        
   # Continuous-Deployment:
   #   needs: Continuous-Integration
   #   runs-on: self-hosted
